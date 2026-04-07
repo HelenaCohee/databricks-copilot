@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brickster Learning Copilot — Helena Cohee</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0D1117;--card:#161B22;--card2:#1C2128;--border:#30363D;
+  --text:#E6EDF3;--muted:#8B949E;--dim:#484F58;
+  --brick:#EE3D2C;--brick-glow:rgba(238,61,44,0.15);
+  --green:#3FB950;--yellow:#D29922;--blue:#58A6FF;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.5}
+button{font-family:inherit;cursor:pointer}
+a{color:var(--blue);text-decoration:none}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 15px var(--brick-glow)}50%{box-shadow:0 0 30px var(--brick-glow)}}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+@keyframes barGrow{from{width:0}to{width:var(--w)}}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(13,17,23,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:52px}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo .icon{width:26px;height:26px;background:var(--brick);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;animation:glow 3s infinite}
+.nav-logo span{font-size:14px;font-weight:700}
+.nav-tabs{display:flex;gap:2px;flex-wrap:wrap}
+.nav-tab{background:transparent;color:var(--muted);border:none;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;transition:all .2s}
+.nav-tab.active{background:var(--brick-glow);color:var(--brick)}
+
+/* LAYOUT */
+.wrap{max-width:1100px;margin:0 auto;padding:28px 20px}
+.section{display:none;animation:fadeUp .4s ease}
+.section.active{display:block}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:800px){.grid-4,.grid-3{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}}
+@media(max-width:500px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}}
+
+/* CARDS */
+.card{background:var(--card);border-radius:14px;padding:20px;border:1px solid var(--border)}
+.card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.section-label{font-size:11px;color:var(--brick);text-transform:uppercase;letter-spacing:3px;font-weight:700;margin-bottom:8px}
+
+/* STAT CARDS */
+.stat-card{text-align:center;padding:20px}
+.stat-num{font-size:32px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.stat-label{font-size:12px;font-weight:600;margin-top:4px}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* BIG STATS */
+.big-stat{padding:24px}
+.big-num{font-size:44px;font-weight:700;font-family:'JetBrains Mono',monospace}
+
+/* BARS */
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.bar-label{width:120px;font-size:12px;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:22px;background:var(--border);border-radius:4px;position:relative;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;animation:barGrow .8s ease both}
+.bar-val{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:600}
+.bar-pair{display:flex;gap:2px;flex:1}
+.bar-pair .bar-track{flex:1}
+
+/* PILLAR CARDS */
+.pillar-icon{font-size:24px;margin-bottom:6px}
+.pillar-name{font-size:12px;font-weight:700;margin-bottom:4px}
+.pillar-bar{position:relative;height:5px;background:var(--border);border-radius:3px;margin-bottom:8px}
+.pillar-fill{position:absolute;height:100%;border-radius:3px;transition:width 1s ease}
+.pillar-desc{font-size:11px;color:var(--muted);line-height:1.45}
+
+/* PHASE CARDS */
+.phase-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:4px}
+.phase-title{font-size:17px;font-weight:700;margin-bottom:12px}
+.phase-item{display:flex;gap:8px;margin-bottom:8px;font-size:12px;color:var(--muted);line-height:1.45}
+.phase-item .arrow{flex-shrink:0}
+
+/* GROWTH CHART (SVG) */
+.growth-chart{width:100%;height:auto;display:block}
+
+/* CHAT */
+.chat-box{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;max-width:680px}
+.chat-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.chat-avatar{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--brick),#ff6b5a);display:flex;align-items:center;justify-content:center;font-size:16px}
+.chat-msgs{height:300px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{display:flex;max-width:80%}
+.msg.user{align-self:flex-end}
+.msg-bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.55}
+.msg.assistant .msg-bubble{background:var(--card2);color:var(--text);border-bottom-left-radius:4px}
+.msg.user .msg-bubble{background:var(--brick);color:#fff;border-bottom-right-radius:4px}
+.chat-footer{padding:8px 16px 12px;border-top:1px solid var(--border)}
+.chat-presets{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.chat-preset{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .2s}
+.chat-preset:hover{border-color:var(--brick);color:var(--text)}
+.chat-input-row{display:flex;gap:8px}
+.chat-input{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;font-family:inherit}
+.chat-send{background:var(--brick);border:none;border-radius:10px;padding:0 18px;color:#fff;font-size:13px;font-weight:600}
+.typing-dots{display:flex;gap:4px;padding:8px}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:pulse 1s infinite}
+.typing-dot:nth-child(2){animation-delay:.15s}
+.typing-dot:nth-child(3){animation-delay:.3s}
+
+/* ROI */
+.roi-card{max-width:680px}
+.roi-slider{width:100%;accent-color:var(--brick);-webkit-appearance:none;background:var(--border);border-radius:4px;height:6px;cursor:pointer}
+.roi-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--brick);cursor:pointer}
+.roi-num{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.roi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.roi-box{background:var(--card2);border-radius:12px;padding:16px;text-align:center}
+.roi-box-num{font-size:26px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.roi-box-label{font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:4px}
+
+/* WHY ME */
+.why-card{max-width:680px;border-color:rgba(238,61,44,0.2)}
+.btn-brick{background:var(--brick);color:#fff;padding:8px 20px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;display:inline-block;border:none}
+
+/* FOOTER */
+.footer{text-align:center;margin-top:40px;padding:20px 0;border-top:1px solid var(--border);font-size:11px;color:var(--dim)}
+.legend{display:flex;gap:16px;margin-top:10px;font-size:11px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <div class="icon">B</div>
+      <span>Brickster Learning Copilot</span>
+    </div>
+    <div class="nav-tabs" id="tabs"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- OVERVIEW -->
+  <div class="section active" id="sec-overview">
+    <div style="text-align:center;margin-bottom:40px">
+      <div class="section-label">From Workshops to Workflows</div>
+      <h1 style="font-size:36px;font-weight:700;line-height:1.15;margin-bottom:12px">Databricks is scaling faster<br>than its learning systems</h1>
+      <p style="font-size:15px;color:var(--muted);max-width:580px;margin:0 auto">13,000 Bricksters. 4,400+ new hires per year. The opportunity isn't better workshops. It's AI-native development infrastructure.</p>
+    </div>
+    <div class="grid-4" style="margin-bottom:24px">
+      <div class="card stat-card" style="animation:fadeUp .4s .0s both"><div class="stat-num" style="color:var(--brick)">13K</div><div class="stat-label">Employees</div><div class="stat-sub">6x growth in 5 years</div></div>
+      <div class="card stat-card" style="animation:fadeUp .4s .1s both"><div class="stat-num" style="color:var(--green)">$4.0B</div><div class="stat-label">Revenue (2026)</div><div class="stat-sub">$155B valuation</div></div>
+      <div class="card stat-card" style="animation:fadeUp .4s .2s both"><div class="stat-num" style="color:var(--yellow)">4.5 mo</div><div class="stat-label">Avg. Ramp Time</div><div class="stat-sub">3–6 months to productivity</div></div>
+      <div class="card stat-card" style="animation:fadeUp .4s .3s both"><div class="stat-num" style="color:var(--blue)">4,400+</div><div class="stat-label">New Hires / Year</div><div class="stat-sub">49% engineering roles</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Headcount Growth (2020–2026)</div>
+      <svg class="growth-chart" viewBox="0 0 600 220">
+        <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EE3D2C" stop-opacity="0.25"/><stop offset="100%" stop-color="#EE3D2C" stop-opacity="0"/></linearGradient></defs>
+        <!-- Grid -->
+        <line x1="60" y1="190" x2="580" y2="190" stroke="#30363D" stroke-width="1"/>
+        <line x1="60" y1="10" x2="60" y2="190" stroke="#30363D" stroke-width="1"/>
+        <line x1="60" y1="55" x2="580" y2="55" stroke="#30363D" stroke-width="0.5" stroke-dasharray="4"/>
+        <line x1="60" y1="100" x2="580" y2="100" stroke="#30363D" stroke-width="0.5" stroke-dasharray="4"/>
+        <line x1="60" y1="145" x2="580" y2="145" stroke="#30363D" stroke-width="0.5" stroke-dasharray="4"/>
+        <!-- Y labels -->
+        <text x="54" y="15" fill="#8B949E" font-size="10" text-anchor="end" font-family="JetBrains Mono">15K</text>
+        <text x="54" y="60" fill="#8B949E" font-size="10" text-anchor="end" font-family="JetBrains Mono">10K</text>
+        <text x="54" y="105" fill="#8B949E" font-size="10" text-anchor="end" font-family="JetBrains Mono">5K</text>
+        <text x="54" y="195" fill="#8B949E" font-size="10" text-anchor="end" font-family="JetBrains Mono">0</text>
+        <!-- X labels -->
+        <text x="100" y="210" fill="#8B949E" font-size="10" text-anchor="middle">2020</text>
+        <text x="187" y="210" fill="#8B949E" font-size="10" text-anchor="middle">2021</text>
+        <text x="274" y="210" fill="#8B949E" font-size="10" text-anchor="middle">2022</text>
+        <text x="361" y="210" fill="#8B949E" font-size="10" text-anchor="middle">2023</text>
+        <text x="448" y="210" fill="#8B949E" font-size="10" text-anchor="middle">2024</text>
+        <text x="535" y="210" fill="#8B949E" font-size="10" text-anchor="middle">2025</text>
+        <!-- Area fill: y = 190 - (emp/15000)*180 -->
+        <polygon points="100,166 187,152 274,130 361,112 448,92 535,64 535,190 100,190" fill="url(#ag)"/>
+        <!-- Line -->
+        <polyline points="100,166 187,152 274,130 361,112 448,92 535,64" fill="none" stroke="#EE3D2C" stroke-width="2.5" stroke-linejoin="round"/>
+        <!-- Dots -->
+        <circle cx="100" cy="166" r="4" fill="#EE3D2C"/><text x="100" y="158" fill="#E6EDF3" font-size="9" text-anchor="middle" font-family="JetBrains Mono">2K</text>
+        <circle cx="187" cy="152" r="4" fill="#EE3D2C"/><text x="187" y="144" fill="#E6EDF3" font-size="9" text-anchor="middle" font-family="JetBrains Mono">3.2K</text>
+        <circle cx="274" cy="130" r="4" fill="#EE3D2C"/><text x="274" y="122" fill="#E6EDF3" font-size="9" text-anchor="middle" font-family="JetBrains Mono">5K</text>
+        <circle cx="361" cy="112" r="4" fill="#EE3D2C"/><text x="361" y="104" fill="#E6EDF3" font-size="9" text-anchor="middle" font-family="JetBrains Mono">6.5K</text>
+        <circle cx="448" cy="92" r="4" fill="#EE3D2C"/><text x="448" y="84" fill="#E6EDF3" font-size="9" text-anchor="middle" font-family="JetBrains Mono">8.2K</text>
+        <circle cx="535" cy="64" r="5" fill="#EE3D2C" stroke="#0D1117" stroke-width="2"/><text x="535" y="52" fill="#EE3D2C" font-size="11" text-anchor="middle" font-weight="700" font-family="JetBrains Mono">13K</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- GAP -->
+  <div class="section" id="sec-gap">
+    <div style="margin-bottom:28px"><div class="section-label">The Gap</div><h2 style="font-size:28px;font-weight:700;margin-bottom:8px">Two signals that talent development needs to evolve</h2><p style="font-size:13px;color:var(--muted)">Employee data (Comparably, insider accounts) reveals where the four TLD pillars have room to grow.</p></div>
+    <div class="grid-2" style="margin-bottom:24px">
+      <div class="card big-stat" style="animation:fadeUp .4s both"><div class="big-num" style="color:var(--yellow)">67%</div><div style="font-size:13px;margin-top:8px;line-height:1.5">of employees say their manager was helpful during onboarding (first 90 days)</div><div style="font-size:10px;color:var(--dim);margin-top:6px">Source: Comparably (public employee data)</div></div>
+      <div class="card big-stat" style="animation:fadeUp .4s .1s both"><div class="big-num" style="color:var(--brick)">50%</div><div style="font-size:13px;margin-top:8px;line-height:1.5">feel Databricks supports their continuous career growth</div><div style="font-size:10px;color:var(--dim);margin-top:6px">Source: Comparably (public employee data)</div></div>
+    </div>
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-title">Ramp Time by Role — Current vs. Target (weeks)</div>
+      <div class="bar-row"><div class="bar-label">Data Engineer</div><div class="bar-track"><div class="bar-fill" style="--w:75%;width:75%;background:var(--brick)"></div><div class="bar-val">18 wks</div></div></div>
+      <div class="bar-row"><div class="bar-label">Solutions Arch.</div><div class="bar-track"><div class="bar-fill" style="--w:83%;width:83%;background:var(--brick)"></div><div class="bar-val">20 wks</div></div></div>
+      <div class="bar-row"><div class="bar-label">Account Exec.</div><div class="bar-track"><div class="bar-fill" style="--w:58%;width:58%;background:var(--yellow)"></div><div class="bar-val">14 wks</div></div></div>
+      <div class="bar-row"><div class="bar-label">Product Manager</div><div class="bar-track"><div class="bar-fill" style="--w:67%;width:67%;background:var(--yellow)"></div><div class="bar-val">16 wks</div></div></div>
+      <div class="bar-row"><div class="bar-label">Corporate (Avg)</div><div class="bar-track"><div class="bar-fill" style="--w:50%;width:50%;background:var(--green)"></div><div class="bar-val">12 wks</div></div></div>
+      <div class="legend"><span style="color:var(--brick)">● High ramp</span><span style="color:var(--yellow)">● Moderate</span><span style="color:var(--green)">● On track</span></div>
+    </div>
+    <div class="card-title" style="margin-bottom:10px">TLD Pillar Readiness</div>
+    <div class="grid-4" id="pillars"></div>
+  </div>
+
+  <!-- SOLUTION -->
+  <div class="section" id="sec-solution">
+    <div style="margin-bottom:28px"><div class="section-label">The Solution</div><h2 style="font-size:28px;font-weight:700">Three phases to AI-native talent development</h2></div>
+    <div class="grid-3" id="phases"></div>
+  </div>
+
+  <!-- COPILOT -->
+  <div class="section" id="sec-copilot">
+    <div style="margin-bottom:20px"><div class="section-label">Live Demo</div><h2 style="font-size:28px;font-weight:700;margin-bottom:6px">Meet the Brickster Learning Copilot</h2><p style="font-size:13px;color:var(--muted)">This is a working AI assistant. Ask it anything a new Databricks employee would need to know.</p></div>
+    <div class="chat-box">
+      <div class="chat-header">
+        <div class="chat-avatar">🤖</div>
+        <div><div style="font-size:14px;font-weight:700">Brickster Learning Copilot</div><div style="font-size:11px;color:var(--green)">● Live — Powered by AI</div></div>
+      </div>
+      <div class="chat-msgs" id="chat-msgs"></div>
+      <div class="chat-footer">
+        <div class="chat-presets" id="chat-presets"></div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chat-input" placeholder="Ask the Copilot anything..." />
+          <button class="chat-send" onclick="sendChat()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROI -->
+  <div class="section" id="sec-roi">
+    <div style="margin-bottom:20px"><div class="section-label">Business Case</div><h2 style="font-size:28px;font-weight:700;margin-bottom:6px">The math on faster ramp time</h2><p style="font-size:13px;color:var(--muted)">Drag the slider to model impact at Databricks' scale.</p></div>
+    <div class="card roi-card">
+      <div class="section-label" style="margin-bottom:4px">Interactive ROI Model</div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:16px">What's faster ramp time worth at Databricks' scale?</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Based on ~4,400 new hires/year, 49% engineering, avg fully-loaded cost of $185K</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:13px">Weeks of ramp time reduced</span><span class="roi-num" style="color:var(--brick)" id="roi-weeks">4</span></div>
+      <input type="range" class="roi-slider" id="roi-slider" min="1" max="10" value="4" oninput="updateROI()">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:4px"><span>1 week</span><span>10 weeks</span></div>
+      <div class="roi-grid">
+        <div class="roi-box"><div class="roi-box-num" style="color:var(--green)" id="roi-per-hire">$7,115</div><div class="roi-box-label">Productivity Recovered / Hire</div></div>
+        <div class="roi-box"><div class="roi-box-num" style="color:var(--blue)" id="roi-eng">2,156</div><div class="roi-box-label">Eng Hires Impacted / Year</div></div>
+        <div class="roi-box"><div class="roi-box-num" style="color:var(--brick)" id="roi-total">$15.3M</div><div class="roi-box-label">Total Annual Impact</div></div>
+      </div>
+    </div>
+    <div class="card why-card" style="margin-top:28px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">Why I built this</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.65">I'm Helena Cohee. I spent 5+ years at Netflix owning the onboarding program for 2,000+ new hires per year, building AI automation that cut manual work by 30%, and shipping a full-stack web app because the tool we needed didn't exist. I built this prototype to show what AI-enabled talent development could look like at Databricks — not as a pitch deck, but as a working system. Every data point is from public sources. The AI copilot is live. The ROI model uses real math.</p>
+      <div style="margin-top:12px"><a href="https://helenacohee.github.io/portfolio/" class="btn-brick">View My Portfolio →</a></div>
+    </div>
+  </div>
+
+  <div class="footer">Brickster Learning Copilot — Prototype by Helena Cohee · <a href="https://helenacohee.github.io/portfolio/">helenacohee.github.io/portfolio</a> · All data sourced publicly</div>
+</div>
+
+<script>
+// ── NAV ──
+const sections = [
+  {id:"overview",l:"The Opportunity"},{id:"gap",l:"The Gap"},{id:"solution",l:"The Solution"},
+  {id:"copilot",l:"AI Copilot Demo"},{id:"roi",l:"ROI Model"}
+];
+const tabsEl = document.getElementById("tabs");
+sections.forEach((s,i) => {
+  const btn = document.createElement("button");
+  btn.className = "nav-tab" + (i===0?" active":"");
+  btn.textContent = s.l;
+  btn.onclick = () => {
+    document.querySelectorAll(".section").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".nav-tab").forEach(el => el.classList.remove("active"));
+    document.getElementById("sec-"+s.id).classList.add("active");
+    btn.classList.add("active");
+  };
+  tabsEl.appendChild(btn);
+});
+
+// ── PILLARS ──
+const pillars = [
+  {name:"New Bricksters",score:72,icon:"🚀",desc:"Onboarding is structured but event-based. 3–6 month ramp suggests gaps in continuous support.",c:"var(--green)"},
+  {name:"Leaders",score:55,icon:"👥",desc:"Only 67% of managers rated helpful at 90 days. Enablement is workshop-dependent, not embedded.",c:"var(--yellow)"},
+  {name:"High-Potential",score:40,icon:"⭐",desc:"Bespoke programs exist but lack AI-powered personalization and scalable infrastructure.",c:"var(--brick)"},
+  {name:"Career & Growth",score:38,icon:"📈",desc:"50% feel supported in growth. No AI-driven career pathing or skills gap visualization at scale.",c:"var(--brick)"}
+];
+const pillarsEl = document.getElementById("pillars");
+pillars.forEach((p,i) => {
+  const d = document.createElement("div");
+  d.className = "card";
+  d.style.animation = `fadeUp .4s ${i*.08}s both`;
+  d.innerHTML = `<div class="pillar-icon">${p.icon}</div><div class="pillar-name">${p.name}</div><div class="pillar-bar"><div class="pillar-fill" style="width:${p.score}%;background:${p.c}"></div></div><div class="pillar-desc">${p.desc}</div>`;
+  pillarsEl.appendChild(d);
+});
+
+// ── PHASES ──
+const phases = [
+  {ph:"Phase 1",t:"AI-Enhanced Onboarding",w:"Weeks 1–12",c:"var(--brick)",items:["Personalized pathway engine by role/function/location","AI assistant for real-time new hire support","Automated check-ins at Day 7, 30, 60, 90","Adoption analytics: completion, time-to-contribution"]},
+  {ph:"Phase 2",t:"Manager Enablement Copilot",w:"Weeks 8–20",c:"var(--yellow)",items:["Manager AI copilot with just-in-time coaching","Searchable, AI-indexed playbook library","Pilot with 2–3 high-growth teams","Connect ramp data to manager confidence"]},
+  {ph:"Phase 3",t:"Agentic Career Pathways",w:"Weeks 16–30",c:"var(--green)",items:["AI-driven career navigation via skills gaps","Proactive recommendations based on projects/goals","Connect engagement to retention and mobility","Scale across all four TLD pillars globally"]}
+];
+const phasesEl = document.getElementById("phases");
+phases.forEach((p,i) => {
+  const d = document.createElement("div");
+  d.className = "card";
+  d.style.animation = `fadeUp .4s ${i*.1}s both`;
+  d.innerHTML = `<div class="phase-label" style="color:${p.c}">${p.ph} · ${p.w}</div><div class="phase-title">${p.t}</div>${p.items.map(it => `<div class="phase-item"><span class="arrow" style="color:${p.c}">→</span><span>${it}</span></div>`).join("")}`;
+  phasesEl.appendChild(d);
+});
+
+// ── CHAT ──
+let chatHistory = [];
+const presets = ["What should I learn in my first 30 days as a Data Engineer?","How does Unity Catalog governance work?","Who should I connect with on the Platform team?"];
+const presetsEl = document.getElementById("chat-presets");
+presets.forEach(p => {
+  const btn = document.createElement("button");
+  btn.className = "chat-preset";
+  btn.textContent = p;
+  btn.onclick = () => sendChat(p);
+  presetsEl.appendChild(btn);
+});
+
+function addMsg(role, text) {
+  const el = document.getElementById("chat-msgs");
+  const d = document.createElement("div");
+  d.className = "msg " + role;
+  d.innerHTML = `<div class="msg-bubble">${text}</div>`;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+function showTyping() {
+  const el = document.getElementById("chat-msgs");
+  const d = document.createElement("div");
+  d.className = "typing-dots";
+  d.id = "typing";
+  d.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+function hideTyping() { document.getElementById("typing")?.remove(); }
+
+addMsg("assistant", "Hi! I'm the Brickster Learning Copilot. I can help with onboarding questions, find learning resources, or recommend your next development step. Try one of the suggestions below, or ask me anything.");
+
+async function sendChat(preset) {
+  const input = document.getElementById("chat-input");
+  const q = preset || input.value.trim();
+  if (!q) return;
+  input.value = "";
+  addMsg("user", q);
+  showTyping();
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514", max_tokens: 1000,
+        system: "You are the Brickster Learning Copilot, an AI assistant for new Databricks employees. Help with onboarding, learning paths, team intros, and career development. Keep responses concise (2-4 sentences), warm, practical. Reference Databricks concepts: Unity Catalog, Delta Lake, Spark, MLflow, Lakehouse architecture, and Databricks culture principles like 'customer obsessed' and 'be an owner.' If asked about people, make up realistic names and roles. Always end with a specific next action.",
+        messages: [{ role: "user", content: q }]
+      })
+    });
+    const data = await res.json();
+    hideTyping();
+    const reply = data.content?.filter(b => b.type === "text").map(b => b.text).join("\n") || "Having trouble connecting right now.";
+    addMsg("assistant", reply);
+  } catch {
+    hideTyping();
+    addMsg("assistant", "In production, I'd be connected to Databricks' internal knowledge base, Confluence, LMS, and org chart. For this demo, try one of the preset questions above!");
+  }
+}
+
+document.getElementById("chat-input").addEventListener("keydown", e => { if (e.key === "Enter") sendChat(); });
+
+// ── ROI ──
+function updateROI() {
+  const w = +document.getElementById("roi-slider").value;
+  const hpy = 4400, engPct = 0.49, cost = 185000;
+  const wc = cost / 52;
+  const pg = w * wc * 0.5;
+  const engHires = Math.round(hpy * engPct);
+  const total = Math.round(pg * engHires);
+  document.getElementById("roi-weeks").textContent = w;
+  document.getElementById("roi-per-hire").textContent = "$" + Math.round(pg).toLocaleString();
+  document.getElementById("roi-eng").textContent = engHires.toLocaleString();
+  document.getElementById("roi-total").textContent = "$" + (total / 1e6).toFixed(1) + "M";
+}
+updateROI();
+</script>
+</body>
+</html>
